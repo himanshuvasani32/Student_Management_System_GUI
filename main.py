@@ -1,7 +1,8 @@
 import sys
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QLineEdit, QGridLayout, QMainWindow,
-                             QTableWidget, QTableWidgetItem, QComboBox, QDialog, QVBoxLayout, QToolBar, QStatusBar)
+                             QTableWidget, QTableWidgetItem, QComboBox, QDialog, QVBoxLayout, QToolBar, QStatusBar,
+                             QMessageBox)
 import sqlite3
 from PyQt6.QtGui import QAction, QIcon
 
@@ -156,14 +157,51 @@ class EditDialog(QDialog):
 
 
 class DeleteDialog(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Delete Student Data")
+
+        layout = QGridLayout()
+
+        confirmation_message = QLabel("Are you sure want to delete?")
+        yes_button = QPushButton("Yes")
+        no_button = QPushButton("No")
+
+        layout.addWidget(confirmation_message, 0, 0, 1, 2)
+        layout.addWidget(yes_button, 1, 0)
+        layout.addWidget(no_button, 1, 1)
+
+        self.setLayout(layout)
+
+        yes_button.clicked.connect(self.delete_record)
+
+    def delete_record(self):
+        # Get the current selected index and student id
+        index = main_window.table.currentRow()
+        student_id = main_window.table.item(index, 0).text()
+
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM students WHERE id = ?", (student_id, ))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        main_window.load_data()
+
+        self.close()
+
+        confirmation_widget = QMessageBox()
+        confirmation_widget.setWindowTitle("Success Message")
+        confirmation_widget.setText("The record was deleted successfully!")
+        confirmation_widget.exec()
 
 
 class InsertDialog(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Add Student Details")
+        self.setWindowTitle("Add Student Data")
         self.setFixedWidth(300)
         self.setFixedHeight(300)
 
